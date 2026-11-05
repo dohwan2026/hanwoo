@@ -14,18 +14,21 @@
   --bg: #f5f6f2; --card: #ffffff; --text: #1b1f1a; --muted: #66705f; --line: #e1e5dc;
   --accent: #1f7a3d; --accent-text: #ffffff; --chip: #edf1e8; --danger: #d23b30; --ok: #1f8a4c;
   --warn: #c77700; --warn-bg: #fff3d6; --warn-text: #6b4e00; --pink: #c2417a; --blue: #2563eb;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #101310; --card: #191d18; --text: #e7ebe4; --muted: #9ba596; --line: #2b3229;
     --accent: #3fae62; --chip: #232922; --danger: #ff6a5f; --ok: #3fc07a;
     --warn: #ffb547; --warn-bg: #3a3014; --warn-text: #ffd978; --pink: #ff7fb2; --blue: #6b9bff;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
   }
 }
 :root[data-theme="dark"] {
   --bg: #101310; --card: #191d18; --text: #e7ebe4; --muted: #9ba596; --line: #2b3229;
   --accent: #3fae62; --chip: #232922; --danger: #ff6a5f; --ok: #3fc07a;
   --warn: #ffb547; --warn-bg: #3a3014; --warn-text: #ffd978; --pink: #ff7fb2; --blue: #6b9bff;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -142,6 +145,20 @@ label.check input { width: 24px; height: 24px; }
 .hours div { flex: none; width: 54px; text-align: center; border-radius: 10px; padding: 6px 0; color: #fff; font-size: .8rem; font-weight: 700; }
 .hours b { display: block; font-size: 1rem; }
 a { color: var(--accent); }
+.pchart { position: relative; margin-top: 8px; touch-action: pan-y; }
+.pchart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pchart .grid { stroke: var(--line); stroke-width: 1; }
+.pchart .ax { fill: var(--muted); font-size: 11px; }
+.pchart .lbl { fill: var(--text); font-size: 11px; font-weight: 700; }
+.pchart .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pchart .cx { stroke: var(--muted); stroke-width: 1; }
+.ptip { position: absolute; top: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: .82rem; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,.15); white-space: nowrap; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.ptable { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.ptable th, .ptable td { padding: 8px 4px; border-top: 1px solid var(--line); text-align: right; }
+.ptable th:first-child, .ptable td:first-child { text-align: left; }
+.ptable thead th { border-top: 0; color: var(--muted); font-weight: 600; font-size: .82rem; }
 .note { color: var(--muted); font-size: .82rem; margin-top: 20px; }
 </style>
 </head>
@@ -584,6 +601,7 @@ function viewShip() {
   const noBirth = active().filter(c => c.group === '비육우' && !c.birth).length;
   return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/tools">← 도구</a></div>
   <h1>🚚 출하 관리</h1><p class="sub">비육우를 출하 목표일 순으로 보여 줘요. 기본 목표 ${S.kv.shipMonths}개월령(설정에서 변경)</p>
+  ${priceCard()}
   <div class="card"><h2>${yr}년 출하 실적</h2><div class="stats" style="grid-template-columns:repeat(2,1fr)">
     <div><b>${shipped.length}</b><span>출하 두수</span></div><div><b style="font-size:1.15rem">${won(sum)}</b><span>받은 금액</span></div></div>
     ${Object.keys(grades).length ? `<p class="muted small" style="margin:10px 0 0">등급: ${['1++', '1+', '1', '2', '3', '등외'].filter(g => grades[g]).map(g => `${g} ${grades[g]}두`).join(' · ')}</p>` : ''}
@@ -593,9 +611,100 @@ function viewShip() {
   ${list.length ? `<ul class="list">${list.map(x => `<li data-go="#/cow/${x.c.id}"><div class="num ${sexCls(x.c)}">${esc(short(x.c.tag))}</div><div class="info"><div><b>${x.age}개월</b> <span class="muted small">/ 목표 ${x.m}개월</span></div><div class="bar"><div style="width:${Math.max(0, Math.min(100, x.age / x.m * 100))}%"></div></div><div class="muted small">${x.w ? `최근 ${x.w.kg}kg (${fmtD(x.w.date)})` : '체중 기록 없음'}${x.c.pen ? ` · ${esc(x.c.pen)}` : ''}</div></div><div class="right"><div>${fmtD(x.date)}</div><div class="${x.d < 0 ? 'over' : x.d <= 30 ? 'soon' : 'muted'}">${x.d < 0 ? `${-x.d}일 지남` : `${x.d}일 남음`}</div></div></li>`).join('')}</ul>` : '<p class="muted">구분이 “비육우”이고 생년월일이 있는 소가 여기에 나와요.</p>'}
   ${noBirth ? `<p class="msg" style="margin-top:10px">생년월일이 없는 비육우 ${noBirth}두는 목록에서 빠졌어요.</p>` : ''}
   </div>
-  <div class="card"><h2>한우 시세 보기</h2><p class="muted small">경락가격은 아래 공식 사이트에서 확인하세요. (앱 안으로 바로 불러오려면 공공데이터 인증키와 중계 서버가 필요해서 지금은 바로가기로 연결해요.)</p>
-    <div class="grid2"><a class="btn ghost" href="https://www.ekapepia.com" target="_blank" rel="noopener">축산유통정보</a><a class="btn ghost" href="https://www.ekape.or.kr" target="_blank" rel="noopener">축산물품질평가원</a></div></div>
   <p class="note">출하하면 소 화면에서 “🚚 출하”를 기록하세요. 상태가 ‘출하’로 바뀌고, 금액을 넣으면 장부 수입에도 자동으로 들어갑니다.</p>`;
+}
+
+/* ----- 한우 경락가격 (GitHub Actions가 매일 받아 둔 prices.json) ----- */
+let priceSex = '거세';
+const PGRADES = ['1++', '1+', '1', '2', '3', '평균'];
+const PSER = [['1++', 'var(--s1)'], ['1+', 'var(--s2)'], ['평균', 'var(--s3)']];
+const MIN_HEAD = 100; // 거래가 이보다 적은 날(주로 월요일)은 값이 튀어서 뺀다
+const priceDays = () => (S.prices?.days || []).filter(d => (d[priceSex]?.['평균']?.cnt || 0) >= MIN_HEAD);
+const DRESS = 0.6; // 생체중 → 도체중 어림 비율(도체율 약 60%)
+async function loadPrices() {
+  try { const r = await fetch('prices.json', { cache: 'no-cache' }); if (r.ok) { S.prices = await r.json(); await setKV('prices', S.prices); return; } } catch { }
+  S.prices = S.kv.prices || null;
+}
+const manwon = v => (v / 10000).toFixed(1) + '만';
+const gName = g => g === '평균' ? '전체 평균' : g + '등급';
+function priceCard() {
+  const P = S.prices, links = `<p class="muted small" style="margin:12px 0 0">자세한 시세: <a href="https://www.ekapepia.com" target="_blank" rel="noopener">축산유통정보</a> · <a href="https://www.ekape.or.kr" target="_blank" rel="noopener">축산물품질평가원</a></p>`;
+  const days = priceDays();
+  if (!days.length) return `<div class="card"><h2>한우 경락가격</h2><p class="muted">시세를 아직 불러오지 못했어요. 인터넷에 연결된 상태로 다시 열어 주세요.</p>${links}</div>`;
+  const last = days[days.length - 1], prevDay = [...days].reverse().find(d => diff(d.date, last.date) >= 7);
+  const rows = PGRADES.filter(g => last[priceSex][g]).map(g => {
+    const cur = last[priceSex][g], pv = prevDay?.[priceSex]?.[g];
+    let ch = '';
+    if (pv) { const dlt = cur.amt - pv.amt; ch = dlt === 0 ? '<span class="muted">-</span>' : `<span class="${dlt > 0 ? 'money-out' : 'money-in'}">${dlt > 0 ? '▲' : '▼'} ${Math.abs(dlt).toLocaleString()}</span>`; }
+    return `<tr><td><b>${gName(g)}</b></td><td><b>${cur.amt.toLocaleString()}</b>원</td><td class="muted">${cur.cnt.toLocaleString()}두</td><td>${ch}</td></tr>`;
+  }).join('');
+  return `<div class="card"><h2>한우 경락가격 <span class="muted small">(도체 kg당, 전국)</span></h2>
+    <div class="chips">${['거세', '암'].map(x => `<button class="chip ${priceSex === x ? 'on' : ''}" data-act="pSex" data-v="${x}">${x}</button>`).join('')}</div>
+    <p class="muted small" style="margin:0 0 6px">${fmtD(last.date)} 경매 기준${prevDay ? ` · 등락은 ${fmtD(prevDay.date)} 대비` : ''}</p>
+    <table class="ptable"><thead><tr><th>등급</th><th>kg당</th><th>두수</th><th>등락</th></tr></thead><tbody>${rows}</tbody></table>
+    <h3>최근 ${days.length}일 추이 <span class="small">(그래프를 누르면 그날 값)</span></h3>
+    <p class="muted small" style="margin:-4px 0 6px">거래가 ${MIN_HEAD}두 미만인 날(주로 월요일)은 값이 크게 튀어서 뺐어요.</p>
+    <div class="legend">${PSER.map(([g, c]) => `<span><i style="background:${c}"></i>${g === '평균' ? '전체 평균' : g}</span>`).join('')}</div>
+    ${priceChart(days)}
+  </div>
+  <div class="card"><h2>🧮 예상 금액 계산</h2>
+    <div class="grid2">
+      <label class="field" style="margin-top:0"><span>등급 (${priceSex})</span><select id="pcGrade">${PGRADES.filter(g => last[priceSex][g]).map(g => `<option value="${g}" ${g === '1+' ? 'selected' : ''}>${gName(g)} · ${last[priceSex][g].amt.toLocaleString()}원</option>`).join('')}</select></label>
+      <label class="field" style="margin-top:0"><span>무게 구분</span><select id="pcKind"><option value="live">생체중 (산 소)</option><option value="carcass">도체중</option></select></label>
+    </div>
+    <label class="field"><span>무게 kg</span><input type="number" id="pcKg" inputmode="decimal" placeholder="예: 750"></label>
+    <div style="text-align:center;margin-top:14px"><div class="muted">예상 경락 금액</div><div class="big-tag" id="pcOut">-</div><div class="muted small" id="pcHint"></div></div>
+    <p class="muted small" style="margin:10px 0 0">생체중은 도체율 ${DRESS * 100}%로 어림해 도체중으로 바꿔요. 실제 금액은 도체율·근내지방·결함·수수료에 따라 달라집니다.</p>
+    ${links}
+  </div>`;
+}
+let pc = null;
+function priceChart(days) {
+  const n = days.length; if (n < 2) return '';
+  const W = 360, H = 190, L = 34, R = 44, T = 10, B = 22;
+  const vals = days.flatMap(d => PSER.map(([g]) => d[priceSex][g]?.amt).filter(Boolean));
+  const lo = Math.floor(Math.min(...vals) / 1000) * 1000, hi = Math.ceil(Math.max(...vals) / 1000) * 1000;
+  const x = i => L + (W - L - R) * i / (n - 1), y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo || 1));
+  pc = { days, n, x, y, W, L, R };
+  const ticks = [0, 1, 2, 3].map(k => lo + (hi - lo) * k / 3);
+  const lines = PSER.map(([g, c]) => {
+    let d = '', pen = false;
+    days.forEach((dd, i) => { const v = dd[priceSex][g]?.amt; if (v) { d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`; pen = true; } else pen = false; });
+    return `<path class="ln" d="${d}" stroke="${c}"/>`;
+  }).join('');
+  // 선 끝 이름표 (겹치지 않게 12px 이상 띄움)
+  const ends = PSER.map(([g]) => { const v = days[n - 1][priceSex][g]?.amt; return v ? { g, yy: y(v) } : null; }).filter(Boolean).sort((a, b) => a.yy - b.yy);
+  for (let i = 1; i < ends.length; i++) if (ends[i].yy - ends[i - 1].yy < 12) ends[i].yy = ends[i - 1].yy + 12;
+  const mid = Math.floor((n - 1) / 2);
+  return `<div class="pchart" id="pchart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${priceSex} 등급별 경락가격 추이">
+    ${ticks.map(t => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}"/><text class="ax" x="${L - 4}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end">${manwon(t)}</text>`).join('')}
+    ${[0, mid, n - 1].map(i => `<text class="ax" x="${x(i).toFixed(1)}" y="${H - 4}" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}">${fmtD(days[i].date)}</text>`).join('')}
+    ${lines}
+    ${ends.map(e => `<text class="lbl" x="${W - R + 5}" y="${(e.yy + 4).toFixed(1)}">${e.g}</text>`).join('')}
+    <line class="cx hidden" id="pcx" y1="${T}" y2="${H - B}"/><g id="pdots"></g>
+    <rect x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/>
+  </svg><div class="ptip hidden" id="ptip"></div></div>`;
+}
+function priceHover(e) {
+  const box = $('#pchart'); if (!box || !pc) return;
+  const r = box.querySelector('svg').getBoundingClientRect(), sx = (e.clientX - r.left) / r.width * pc.W;
+  const i = Math.max(0, Math.min(pc.n - 1, Math.round((sx - pc.L) / (pc.W - pc.L - pc.R) * (pc.n - 1))));
+  const d = pc.days[i], X = pc.x(i), ln = $('#pcx'), tip = $('#ptip');
+  ln.setAttribute('x1', X); ln.setAttribute('x2', X); ln.classList.remove('hidden');
+  $('#pdots').innerHTML = PSER.map(([g, c]) => { const v = d[priceSex][g]?.amt; return v ? `<circle cx="${X}" cy="${pc.y(v)}" r="4" fill="${c}" stroke="var(--card)" stroke-width="2"/>` : ''; }).join('');
+  tip.innerHTML = `<b>${fmtD(d.date)}</b><br>` + PSER.map(([g, c]) => { const v = d[priceSex][g]; return v ? `<span style="color:${c}">●</span> ${g} ${v.amt.toLocaleString()}원 (${v.cnt}두)` : ''; }).filter(Boolean).join('<br>');
+  tip.classList.remove('hidden');
+  const px = X / pc.W * r.width, tw = tip.offsetWidth;
+  tip.style.left = Math.max(0, Math.min(r.width - tw, px + (px > r.width / 2 ? -tw - 10 : 10))) + 'px';
+}
+function hidePriceHover() { $('#ptip')?.classList.add('hidden'); $('#pcx')?.classList.add('hidden'); const p = $('#pdots'); if (p) p.innerHTML = ''; }
+function priceCalc() {
+  const g = $('#pcGrade')?.value, kg = +$('#pcKg')?.value, kind = $('#pcKind')?.value;
+  const last = priceDays().pop(), amt = last[priceSex][g]?.amt;
+  if (!kg || !amt) { $('#pcOut').textContent = '-'; $('#pcHint').textContent = ''; return; }
+  const carcass = kind === 'live' ? kg * DRESS : kg;
+  $('#pcOut').textContent = won(Math.round(carcass * amt / 10000) * 10000);
+  $('#pcHint').textContent = `도체 ${Math.round(carcass)}kg × ${amt.toLocaleString()}원`;
 }
 
 /* ================= 6. 사료·비용 장부 ================= */
@@ -733,12 +842,12 @@ function viewSettings() {
     <p class="muted small" style="margin:10px 0 0">접종 주기: ${Object.entries(VAX).map(([k, v]) => `${k} ${v}개월`).join(', ')}, 구충 ${DEWORM_MONTHS}개월. 다른 주기가 필요하면 기록할 때 ‘다음 접종일’을 직접 넣으세요.</p>
   </div>
   <div class="card"><h2>위험 구역</h2><button class="btn danger block" data-act="wipe">모든 데이터 지우기</button></div>
-  <p class="note">한우 수첩 · 서버 없이 이 폰에서만 동작합니다 (더위 경보의 날씨 조회만 인터넷 사용).</p>`;
+  <p class="note">한우 수첩 · 서버 없이 이 폰에서만 동작합니다 (더위 경보의 날씨, 한우 시세만 인터넷 사용).<br>시세 출처: 축산물품질평가원 소도체 등급별 경락가격정보(공공데이터포털)</p>`;
 }
 const blobToData = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
 async function makeBackup() {
   const photos = await DB.all('photos');
-  const data = { app: 'hanwoo', ver: 1, at: new Date().toISOString(), cows: S.cows, events: S.events, ledger: S.ledger, kv: Object.fromEntries(Object.entries(S.kv).filter(([k]) => k !== 'heatCache')), photos: await Promise.all(photos.map(async p => ({ id: p.id, data: await blobToData(p.blob) }))) };
+  const data = { app: 'hanwoo', ver: 1, at: new Date().toISOString(), cows: S.cows, events: S.events, ledger: S.ledger, kv: Object.fromEntries(Object.entries(S.kv).filter(([k]) => k !== 'heatCache' && k !== 'prices')), photos: await Promise.all(photos.map(async p => ({ id: p.id, data: await blobToData(p.blob) }))) };
   const name = `한우수첩-백업-${today()}.json`, text = JSON.stringify(data);
   const file = new File([text], name, { type: 'application/json' });
   let shared = false;
@@ -816,6 +925,8 @@ function render() {
   if (page === 'heat' && S.kv.lat != null && (!S.heat || Date.now() - S.heat.at > 2 * 3600e3)) fetchHeat().then(render, e => toast(e.message));
 }
 window.addEventListener('hashchange', render);
+for (const ev of ['pointermove', 'pointerdown']) document.addEventListener(ev, e => { if (e.target.closest?.('#pchart')) priceHover(e); });
+document.addEventListener('pointerleave', e => { if (e.target.id === 'pchart') hidePriceHover(); }, true);
 
 document.addEventListener('click', async e => {
   const go = e.target.closest('[data-go]'); const a = e.target.closest('[data-act]');
@@ -852,6 +963,7 @@ document.addEventListener('click', async e => {
         await setKV('wFactor', f); toast(`보정 계수 ${f}로 저장`); return render();
       }
       case 'lMonth': { const [y, m] = ledgerMonth.split('-').map(Number); const dt = new Date(y, m - 1 + +d.v, 1); ledgerMonth = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`; return render(); }
+      case 'pSex': priceSex = d.v; return render();
       case 'lAdd': return editLedger(d.v);
       case 'lEdit': return editLedger(null, S.ledger.find(x => x.id === d.id));
       case 'lCsv': {
@@ -880,6 +992,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'cowQ') { cowFilter.q = t.value; const l = filteredCows(); $('#cowBox').innerHTML = cowListHtml(l); $('#cowCount').textContent = l.length; }
+  if (t.id === 'pcKg') priceCalc();
   if (t.id === 'wG' || t.id === 'wL') {
     const g = +$('#wG').value, l = +$('#wL').value;
     if (g > 50 && l > 50) { const w = estWeight(g, l); $('#wOut').textContent = `${w} kg`; $('#wRange').textContent = `대략 ${Math.round(w * .9)} ~ ${Math.round(w * 1.1)} kg`; }
@@ -888,6 +1001,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', async e => {
   const t = e.target;
+  if (t.id === 'pcGrade' || t.id === 'pcKind') priceCalc();
   if (t.id === 'fPen') { cowFilter.pen = t.value; render(); }
   if (t.id === 'fStatus') { cowFilter.status = t.value; render(); }
   if (t.id === 'bPen') { bulk.pen = t.value; render(); }
@@ -911,6 +1025,7 @@ document.addEventListener('change', async e => {
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   render();
   if (S.kv.lat != null && navigator.onLine) fetchHeat().then(() => { if ((location.hash || '#/') === '#/' || location.hash === '#/heat') render(); }, () => {});
+  loadPrices().then(() => { if (location.hash === '#/ship') render(); });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
