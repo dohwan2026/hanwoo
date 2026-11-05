@@ -1,0 +1,16 @@
+{
+  "name": "한우 수첩",
+  "short_name": "한우수첩",
+  "description": "한우 개체·번식·접종·체중·출하·장부·더위 경보를 한 곳에서 관리하는 농장 수첩",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f2",
+  "theme_color": "#1f7a3d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

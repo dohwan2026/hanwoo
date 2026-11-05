@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>한우 수첩</title>
+<meta name="description" content="한우 개체·번식·접종·체중·출하·장부·더위 경보를 한 곳에서 관리하는 농장 수첩">
+<meta name="theme-color" content="#1f7a3d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root {
+  --bg: #f5f6f2; --card: #ffffff; --text: #1b1f1a; --muted: #66705f; --line: #e1e5dc;
+  --accent: #1f7a3d; --accent-text: #ffffff; --chip: #edf1e8; --danger: #d23b30; --ok: #1f8a4c;
+  --warn: #c77700; --warn-bg: #fff3d6; --warn-text: #6b4e00; --pink: #c2417a; --blue: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101310; --card: #191d18; --text: #e7ebe4; --muted: #9ba596; --line: #2b3229;
+    --accent: #3fae62; --chip: #232922; --danger: #ff6a5f; --ok: #3fc07a;
+    --warn: #ffb547; --warn-bg: #3a3014; --warn-text: #ffd978; --pink: #ff7fb2; --blue: #6b9bff;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101310; --card: #191d18; --text: #e7ebe4; --muted: #9ba596; --line: #2b3229;
+  --accent: #3fae62; --chip: #232922; --danger: #ff6a5f; --ok: #3fc07a;
+  --warn: #ffb547; --warn-bg: #3a3014; --warn-text: #ffd978; --pink: #ff7fb2; --blue: #6b9bff;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  font-size: 17px; line-height: 1.5; -webkit-tap-highlight-color: transparent;
+}
+main { max-width: 600px; margin: 0 auto; padding: max(14px, env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom)); }
+h1 { font-size: 1.45rem; margin: 4px 0 2px; }
+h2 { font-size: 1.1rem; margin: 0 0 12px; }
+h3 { font-size: 1rem; margin: 16px 0 8px; color: var(--muted); }
+.sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+.muted { color: var(--muted); font-size: .9rem; }
+.small { font-size: .85rem; }
+.hidden { display: none !important; }
+button, input, textarea, select { font: inherit; color: inherit; }
+.btn {
+  border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-text);
+  min-height: 52px; padding: 10px 16px; font-weight: 700; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-align: center;
+}
+.btn:disabled { opacity: .5; }
+.btn.ghost { background: var(--chip); color: var(--text); }
+.btn.danger { background: var(--danger); color: #fff; }
+.btn.block { width: 100%; }
+.btn.sm { min-height: 40px; padding: 6px 12px; font-size: .92rem; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row > .grow { flex: 1; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chip {
+  min-height: 42px; border-radius: 999px; border: 1px solid var(--line); background: var(--chip);
+  font-weight: 600; cursor: pointer; padding: 6px 14px;
+}
+.chip.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+label.field { display: block; margin-top: 12px; }
+label.field > span { display: block; font-size: .9rem; color: var(--muted); margin-bottom: 6px; }
+input[type=text], input[type=number], input[type=date], input[type=search], select, textarea {
+  width: 100%; min-height: 52px; padding: 10px 12px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--bg); font-size: 17px;
+}
+textarea { min-height: 76px; resize: vertical; }
+label.check { display: flex; gap: 10px; align-items: center; margin-top: 14px; min-height: 44px; }
+label.check input { width: 24px; height: 24px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+.kv:first-child { border-top: 0; }
+.kv b { text-align: right; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.stats div { background: var(--chip); border-radius: 12px; padding: 10px 4px; }
+.stats b { display: block; font-size: 1.45rem; line-height: 1.2; }
+.stats span { font-size: .8rem; color: var(--muted); }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); cursor: pointer; }
+.list li:first-child { border-top: 0; }
+.list .num { flex: none; min-width: 72px; height: 52px; border-radius: 12px; background: var(--chip); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; letter-spacing: .5px; padding: 0 8px; }
+.list .num.f { background: #fde3ee; color: #9b2457; }
+.list .num.m { background: #dfe9ff; color: #1f47a8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .list .num.f { background: #3d2230; color: #ffb3d1; } :root:not([data-theme="light"]) .list .num.m { background: #1f2a45; color: #b6ccff; } }
+.list li.grp { display: block; cursor: default; }
+.list li.grp summary { display: flex; gap: 12px; align-items: center; cursor: pointer; list-style: none; }
+.list li.grp summary::-webkit-details-marker { display: none; }
+.list li.grp details[open] summary .muted.small:first-of-type { visibility: hidden; }
+.list .info { flex: 1; min-width: 0; }
+.list .info div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .right { flex: none; text-align: right; font-size: .88rem; }
+.badge { display: inline-block; font-size: .78rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--text); margin-left: 4px; vertical-align: 1px; }
+.badge.g { background: var(--accent); color: var(--accent-text); }
+.badge.r { background: var(--danger); color: #fff; }
+.badge.y { background: var(--warn-bg); color: var(--warn-text); }
+.badge.p { background: var(--pink); color: #fff; }
+.over { color: var(--danger); font-weight: 700; }
+.soon { color: var(--warn); font-weight: 700; }
+.msg { margin: 0 0 14px; padding: 12px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn-text); font-size: .93rem; }
+.msg.err { background: var(--danger); color: #fff; }
+.heat { border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; font-weight: 700; color: #fff; cursor: pointer; }
+.lv0 { background: #1f8a4c; } .lv1 { background: #c99a00; } .lv2 { background: #e06c00; } .lv3 { background: #d23b30; } .lv4 { background: #7b1fa2; }
+.photo { display: block; width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; background: var(--chip); margin-bottom: 12px; }
+.acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.acts .btn { min-height: 60px; flex-direction: column; gap: 0; font-size: .92rem; }
+.acts .btn i { font-style: normal; font-size: 1.35rem; line-height: 1.2; }
+.big-tag { font-size: 2.3rem; font-weight: 800; letter-spacing: 1px; line-height: 1.1; }
+.tl { list-style: none; margin: 0; padding: 0; }
+.tl li { padding: 10px 0; border-top: 1px solid var(--line); display: flex; gap: 10px; }
+.tl li:first-child { border-top: 0; }
+.tl .d { flex: none; width: 86px; color: var(--muted); font-size: .9rem; }
+.tl .x { flex: none; border: 0; background: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; min-width: 40px; }
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); z-index: 10;
+}
+.tabbar a { text-decoration: none; color: var(--muted); text-align: center; padding: 8px 0 10px; font-size: .82rem; font-weight: 700; }
+.tabbar a i { display: block; font-style: normal; font-size: 1.45rem; line-height: 1.3; }
+.tabbar a.on { color: var(--accent); }
+.fab { position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); width: 62px; height: 62px; border-radius: 50%; font-size: 2rem; box-shadow: 0 6px 18px rgba(0,0,0,.25); z-index: 9; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--card); width: 100%; max-width: 600px; max-height: 92vh; overflow: auto; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+.sheet .foot { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 18px; position: sticky; bottom: 0; background: var(--card); padding-top: 8px; }
+.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #222; color: #fff; padding: 12px 18px; border-radius: 12px; z-index: 30; font-weight: 600; max-width: 90vw; }
+.bar { height: 10px; border-radius: 6px; background: var(--chip); overflow: hidden; margin-top: 4px; }
+.bar > div { height: 100%; background: var(--accent); }
+.monthnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.monthnav b { font-size: 1.2rem; }
+.money-in { color: var(--blue); font-weight: 700; }
+.money-out { color: var(--danger); font-weight: 700; }
+.pick { max-height: 46vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; padding: 0 10px; }
+.pick label { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.pick label:first-child { border-top: 0; }
+.pick input { width: 24px; height: 24px; flex: none; }
+.hours { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; }
+.hours div { flex: none; width: 54px; text-align: center; border-radius: 10px; padding: 6px 0; color: #fff; font-size: .8rem; font-weight: 700; }
+.hours b { display: block; font-size: 1rem; }
+a { color: var(--accent); }
+.note { color: var(--muted); font-size: .82rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav class="tabbar" id="tabbar">
+  <a href="#/" data-tab="home"><i>🏠</i>홈</a>
+  <a href="#/cows" data-tab="cows"><i>🐂</i>소 목록</a>
+  <a href="#/ledger" data-tab="ledger"><i>💰</i>장부</a>
+  <a href="#/tools" data-tab="tools"><i>🧰</i>도구</a>
+</nav>
+<script>
+'use strict';
+/* ================= 기본 도우미 ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const won = n => (Math.round(+n || 0)).toLocaleString('ko-KR') + '원';
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => ymd(new Date());
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return ymd(d); };
+const addMonths = (s, n) => {
+  const d = parse(s), day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + n);
+  d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return ymd(d);
+};
+const diff = (a, b) => Math.round((parse(b) - parse(a)) / 86400000); // b - a (일)
+const ageMonths = (birth, at = today()) => {
+  if (!birth) return null;
+  const a = parse(birth), b = parse(at);
+  let m = (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth();
+  if (b.getDate() < a.getDate()) m--; return m;
+};
+const fmtD = s => { if (!s) return ''; const y = s.slice(0, 4); const md = `${+s.slice(5, 7)}/${+s.slice(8)}`; return y === today().slice(0, 4) ? md : `${y.slice(2)}.${md.replace('/', '.')}`; };
+const rel = s => { const n = diff(today(), s); return n === 0 ? '오늘' : n === 1 ? '내일' : n === -1 ? '어제' : n > 0 ? `${n}일 뒤` : `${-n}일 지남`; };
+const short = tag => { const t = String(tag || '').replace(/\D/g, ''); return t.length > 4 ? t.slice(-4) : (tag || '?'); };
+const fmtTag = tag => { const t = String(tag || '').replace(/\D/g, ''); return t.length === 12 ? `${t.slice(0, 3)} ${t.slice(3, 7)} ${t.slice(7, 11)} ${t.slice(11)}` : (tag || ''); };
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+/* ================= 저장소 (IndexedDB) ================= */
+const STORES = ['cows', 'events', 'ledger', 'photos', 'kv'];
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('hanwoo', 1);
+      r.onupgradeneeded = () => { for (const s of STORES) if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: s === 'kv' ? 'k' : 'id' }); };
+      r.onsuccess = () => { DB.db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  tx(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = DB.db.transaction(store, mode); const out = fn(t.objectStore(store));
+      t.oncomplete = () => res(out && 'result' in out ? out.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  all: s => DB.tx(s, 'readonly', st => st.getAll()),
+  get: (s, id) => DB.tx(s, 'readonly', st => st.get(id)),
+  put: (s, o) => DB.tx(s, 'readwrite', st => st.put(o)),
+  putMany: (s, arr) => DB.tx(s, 'readwrite', st => { for (const o of arr) st.put(o); }),
+  del: (s, id) => DB.tx(s, 'readwrite', st => st.delete(id)),
+  delMany: (s, ids) => DB.tx(s, 'readwrite', st => { for (const id of ids) st.delete(id); }),
+  clear: s => DB.tx(s, 'readwrite', st => st.clear()),
+};
+
+const DEFAULTS = { gest: 285, cycle: 21, checkDays: 60, postCalving: 60, shipMonths: 30, wFactor: 1, lat: null, lon: null, place: '', lastBackup: null, farm: '' };
+const S = { cows: [], events: [], ledger: [], kv: { ...DEFAULTS }, heat: null };
+async function loadAll() {
+  [S.cows, S.events, S.ledger] = await Promise.all([DB.all('cows'), DB.all('events'), DB.all('ledger')]);
+  const kv = await DB.all('kv'); for (const { k, v } of kv) S.kv[k] = v;
+  S.heat = S.kv.heatCache || null;
+}
+async function setKV(k, v) { S.kv[k] = v; await DB.put('kv', { k, v }); }
+const cowById = id => S.cows.find(c => c.id === id);
+const eventsOf = id => S.events.filter(e => e.cowId === id).sort((a, b) => a.date.localeCompare(b.date) || (a.t || 0) - (b.t || 0));
+const active = () => S.cows.filter(c => (c.status || '사육') === '사육');
+
+/* ================= 1. 개체 관리 ================= */
+const GROUPS = ['번식우', '후보우', '비육우', '송아지'];
+const SEXES = ['암', '수', '거세'];
+const STATUSES = ['사육', '출하', '판매', '폐사'];
+const EV = { '발정': '💗', '수정': '🧪', '임신감정': '🩺', '분만': '🐣', '접종': '💉', '구충': '💊', '치료': '🩹', '체중': '⚖️', '출하': '🚚', '메모': '📝' };
+const sexCls = c => c.sex === '암' ? 'f' : 'm';
+const isBreeder = c => c.sex === '암' && c.group !== '비육우' && c.group !== '송아지';
+
+function cowLine(c) {
+  const age = ageMonths(c.birth);
+  const b = breeding(c);
+  const bits = [c.sex, age != null ? `${age}개월` : '', c.pen ? `${c.pen}` : ''].filter(Boolean).join(' · ');
+  return `<li data-go="#/cow/${c.id}"><div class="num ${sexCls(c)}">${esc(short(c.tag))}</div>
+    <div class="info"><div><b>${esc(c.name || c.group || '')}</b> ${c.name ? `<span class="badge">${esc(c.group)}</span>` : ''}${c.status && c.status !== '사육' ? `<span class="badge r">${esc(c.status)}</span>` : ''}</div>
+    <div class="muted small">${esc(bits)}</div></div>
+    ${b ? `<div class="right"><span class="badge ${b.cls}">${esc(b.label)}</span></div>` : ''}</li>`;
+}
+
+const cowFilter = { q: '', group: '전체', status: '사육', pen: '' };
+function filteredCows() {
+  const f = cowFilter, q = f.q.trim();
+  return S.cows.filter(c => {
+    const st = c.status || '사육';
+    if (f.status === '사육' && st !== '사육') return false;
+    if (f.status === '나감' && st === '사육') return false;
+    if (f.group !== '전체' && c.group !== f.group) return false;
+    if (f.pen && c.pen !== f.pen) return false;
+    if (q && !(String(c.tag).replace(/\D/g, '').includes(q.replace(/\D/g, '') || '@@') || (c.name || '').includes(q) || (c.memo || '').includes(q))) return false;
+    return true;
+  }).sort((a, b) => (a.pen || '').localeCompare(b.pen || '', 'ko', { numeric: true }) || short(a.tag).localeCompare(short(b.tag)));
+}
+const cowListHtml = list => list.length ? `<ul class="list">${list.map(cowLine).join('')}</ul>` : '<p class="muted">해당하는 소가 없습니다.</p>';
+function viewCows() {
+  const f = cowFilter, list = filteredCows();
+  const pens = [...new Set(S.cows.map(c => c.pen).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+  return `<h1>소 목록</h1><p class="sub"><span id="cowCount">${list.length}</span>마리 표시 · 전체 사육 ${active().length}마리</p>
+  <div class="card">
+    <input type="search" id="cowQ" placeholder="귀표번호 끝자리, 이름으로 찾기" value="${esc(f.q)}" inputmode="search">
+    <div class="chips" style="margin-top:10px">${['전체', ...GROUPS].map(g => `<button class="chip ${f.group === g ? 'on' : ''}" data-act="fgroup" data-v="${g}">${g}</button>`).join('')}</div>
+    <div class="row">
+      <select id="fPen" class="grow"><option value="">모든 칸</option>${pens.map(p => `<option ${f.pen === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>
+      <select id="fStatus" class="grow">${[['사육', '사육 중'], ['나감', '출하·판매·폐사'], ['전체', '전체']].map(([v, l]) => `<option value="${v}" ${f.status === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    </div>
+  </div>
+  <div class="grid2" style="margin-bottom:14px"><button class="btn" data-act="newCow">＋ 소 등록</button><a class="btn ghost" href="#/bulk">✅ 여러 마리 기록</a></div>
+  <div class="card" id="cowBox">${cowListHtml(list)}</div>`;
+}
+
+async function editCow(c) {
+  const isNew = !c;
+  c = c || { group: '번식우', sex: '암', status: '사육' };
+  const v = await form(isNew ? '소 등록' : '소 정보 수정', [
+    { k: 'tag', label: '귀표번호 (이력번호 12자리)', type: 'text', value: c.tag, inputmode: 'numeric', required: true, ph: '예: 002123456789' },
+    { k: 'name', label: '이름 / 별명 (선택)', type: 'text', value: c.name },
+    { k: 'sex', label: '성별', type: 'chips', options: SEXES, value: c.sex },
+    { k: 'group', label: '구분', type: 'chips', options: GROUPS, value: c.group },
+    { k: 'birth', label: '생년월일', type: 'date', value: c.birth },
+    { k: 'pen', label: '우사 칸 (예: A-3, 2동 5칸)', type: 'text', value: c.pen, list: [...new Set(S.cows.map(x => x.pen).filter(Boolean))] },
+    { k: 'mother', label: '어미 귀표번호 (선택)', type: 'text', value: c.mother, inputmode: 'numeric' },
+    { k: 'shipMonths', label: `출하 목표 월령 (비우면 기본 ${S.kv.shipMonths}개월)`, type: 'number', value: c.shipMonths },
+    ...(isNew ? [] : [{ k: 'status', label: '상태', type: 'chips', options: STATUSES, value: c.status || '사육' }]),
+    { k: 'memo', label: '메모', type: 'textarea', value: c.memo },
+  ], { del: !isNew });
+  if (!v) return;
+  if (v === 'DELETE') {
+    if (!confirm(`${short(c.tag)}번 소와 모든 기록을 지울까요?\n(출하·판매한 소는 지우지 말고 상태만 바꾸는 걸 권해요)`)) return;
+    const evIds = S.events.filter(e => e.cowId === c.id).map(e => e.id);
+    await DB.delMany('events', evIds); await DB.del('photos', c.id); await DB.del('cows', c.id);
+    S.events = S.events.filter(e => e.cowId !== c.id); S.cows = S.cows.filter(x => x.id !== c.id);
+    toast('삭제했어요'); location.hash = '#/cows'; return;
+  }
+  const tagNum = v.tag.replace(/\s/g, '');
+  const dup = S.cows.find(x => x.id !== c.id && x.tag.replace(/\s/g, '') === tagNum);
+  if (dup && !confirm(`같은 귀표번호(${short(tagNum)})의 소가 이미 있어요. 그래도 저장할까요?`)) return;
+  const cow = { ...c, ...v, tag: tagNum, shipMonths: v.shipMonths ? +v.shipMonths : null, id: c.id || uid(), created: c.created || Date.now() };
+  await DB.put('cows', cow);
+  const i = S.cows.findIndex(x => x.id === cow.id); if (i >= 0) S.cows[i] = cow; else S.cows.push(cow);
+  toast('저장했어요');
+  if (isNew) location.hash = '#/cow/' + cow.id; else render();
+}
+
+const photoUrls = {};
+async function photoUrl(id) {
+  if (id in photoUrls) return photoUrls[id];
+  const p = await DB.get('photos', id); photoUrls[id] = p ? URL.createObjectURL(p.blob) : null; return photoUrls[id];
+}
+function shrink(file, max = 720) {
+  return new Promise((res, rej) => {
+    const img = new Image(); img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(img.src);
+      cv.toBlob(b => b ? res(b) : rej(new Error('사진 변환 실패')), 'image/jpeg', .78);
+    }; img.onerror = () => rej(new Error('사진을 읽지 못했어요')); img.src = URL.createObjectURL(file);
+  });
+}
+
+function viewCow(id) {
+  const c = cowById(id); if (!c) return '<p>소를 찾을 수 없어요.</p><a class="btn" href="#/cows">목록으로</a>';
+  const age = ageMonths(c.birth), b = breeding(c), evs = eventsOf(c.id).reverse();
+  const ws = evs.filter(e => e.type === '체중' && e.kg);
+  let gain = '';
+  if (ws.length >= 2) { const d = diff(ws[1].date, ws[0].date); if (d > 0) gain = `일당증체 ${((ws[0].kg - ws[1].kg) / d).toFixed(2)}kg`; }
+  const mom = c.mother ? S.cows.find(x => x.tag === c.mother.replace(/\s/g, '')) : null;
+  const kids = S.cows.filter(x => x.mother && x.mother.replace(/\s/g, '') === c.tag);
+  const shipM = c.shipMonths || S.kv.shipMonths;
+  const acts = (isBreeder(c) ? ['발정', '수정', '임신감정', '분만'] : []).concat(['접종', '구충', '치료', '체중', '출하', '메모']);
+  setTimeout(async () => { const u = await photoUrl(c.id); const el = $('#cowPhoto'); if (el && u) { el.src = u; el.classList.remove('hidden'); } }, 0);
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/cows">← 목록</a><span class="grow"></span><button class="btn ghost sm" data-act="editCow" data-id="${c.id}">✏️ 수정</button></div>
+  <div class="card">
+    <img id="cowPhoto" class="photo hidden" alt="소 사진">
+    <div class="row"><div class="grow"><div class="big-tag">${esc(short(c.tag))}</div><div class="muted">${esc(fmtTag(c.tag))}</div></div>
+      <label class="btn ghost sm" for="photoIn">📷 사진</label><input type="file" id="photoIn" accept="image/*" capture="environment" class="hidden" data-id="${c.id}"></div>
+    <div style="margin-top:6px"><b>${esc(c.name || '')}</b> <span class="badge">${esc(c.group)}</span> <span class="badge">${esc(c.sex)}</span>${c.status && c.status !== '사육' ? `<span class="badge r">${esc(c.status)}</span>` : ''}</div>
+    <div style="margin-top:10px">
+      <div class="kv"><span>생년월일</span><b>${c.birth ? `${esc(c.birth)} (${age}개월)` : '-'}</b></div>
+      <div class="kv"><span>우사 칸</span><b>${esc(c.pen || '-')}</b></div>
+      ${c.mother ? `<div class="kv"><span>어미</span><b>${mom ? `<a href="#/cow/${mom.id}">${esc(short(mom.tag))}</a>` : esc(short(c.mother))}</b></div>` : ''}
+      ${kids.length ? `<div class="kv"><span>새끼</span><b>${kids.map(k => `<a href="#/cow/${k.id}">${esc(short(k.tag))}</a>`).join(', ')}</b></div>` : ''}
+      ${ws.length ? `<div class="kv"><span>최근 체중</span><b>${ws[0].kg}kg (${fmtD(ws[0].date)}) ${gain ? `<br><span class="muted small">${gain}</span>` : ''}</b></div>` : ''}
+      ${c.group === '비육우' && c.birth ? `<div class="kv"><span>출하 목표</span><b>${shipM}개월 · ${fmtD(addMonths(c.birth, shipM))}</b></div>` : ''}
+      ${c.memo ? `<div class="kv"><span>메모</span><b style="white-space:pre-wrap;font-weight:500">${esc(c.memo)}</b></div>` : ''}
+    </div>
+  </div>
+  ${b ? `<div class="card"><h2>번식 상태 <span class="badge ${b.cls}">${esc(b.label)}</span></h2>${b.tasks.length ? b.tasks.map(t => `<div class="kv"><span>${esc(t.type)}</span><b>${fmtD(t.date)} <span class="${diff(today(), t.date) < 0 ? 'over' : diff(today(), t.date) <= 3 ? 'soon' : 'muted'} small">${rel(t.date)}</span></b></div>`).join('') : '<p class="muted">예정된 일정이 없어요.</p>'}${b.info ? `<p class="muted small" style="margin:8px 0 0">${esc(b.info)}</p>` : ''}</div>` : ''}
+  <div class="card"><h2>기록하기</h2><div class="acts">${acts.map(a => `<button class="btn ghost" data-act="addEv" data-type="${a}" data-id="${c.id}"><i>${EV[a]}</i>${a}</button>`).join('')}</div></div>
+  <div class="card"><h2>기록 (${evs.length})</h2>${evs.length ? `<ul class="tl">${evs.map(e => `<li><div class="d">${esc(e.date)}</div><div class="grow">${EV[e.type] || ''} <b>${esc(e.type)}</b> ${esc(evText(e))}${e.note ? `<div class="muted small" style="white-space:pre-wrap">${esc(e.note)}</div>` : ''}</div><button class="x" data-act="delEv" data-id="${e.id}" aria-label="기록 삭제">✕</button></li>`).join('')}</ul>` : '<p class="muted">아직 기록이 없어요.</p>'}</div>`;
+}
+
+function evText(e) {
+  switch (e.type) {
+    case '수정': return e.bull ? `정액 ${e.bull}` : '';
+    case '임신감정': return e.result || '';
+    case '분만': return [e.calfSex && `송아지 ${e.calfSex}`, e.calfTag && short(e.calfTag)].filter(Boolean).join(' ');
+    case '접종': return `${e.name || ''}${e.next ? ` (다음 ${fmtD(e.next)})` : ''}`;
+    case '구충': return `${e.name || ''}${e.next ? ` (다음 ${fmtD(e.next)})` : ''}`;
+    case '치료': return e.name || '';
+    case '체중': return `${e.kg}kg${e.girth ? ` (흉위 ${e.girth}cm 추정)` : ''}`;
+    case '출하': return [e.kg && `${e.kg}kg`, e.grade && `${e.grade}등급`, e.price && won(e.price)].filter(Boolean).join(' · ');
+    default: return '';
+  }
+}
+
+/* ================= 2. 번식 캘린더 ================= */
+function breeding(c) {
+  if (!isBreeder(c) || (c.status || '사육') !== '사육') return null;
+  const K = S.kv, t = today(), ev = eventsOf(c.id);
+  let lastCalving = null, lastHeat = null, lastAI = null, check = null, aiCount = 0;
+  for (const e of ev) {
+    if (e.type === '분만') { lastCalving = e.date; lastAI = null; check = null; lastHeat = null; aiCount = 0; }
+    else if (e.type === '수정') { lastAI = e.date; check = null; lastHeat = e.date; aiCount++; }
+    else if (e.type === '발정') { lastHeat = e.date; if (!lastAI) check = null; if (lastAI && diff(lastAI, e.date) >= 5) { lastAI = null; check = null; } }
+    else if (e.type === '임신감정' && lastAI) { check = e.result; if (check === '공태') lastAI = null; }
+  }
+  const r = { tasks: [], label: '', cls: '', info: '' };
+  if (lastAI) {
+    const due = addDays(lastAI, K.gest);
+    r.due = due;
+    if (check === '임신') { r.label = `임신 · ${fmtD(due)} 분만`; r.cls = 'p'; r.pregnant = true; }
+    else { r.label = `수정 ${diff(lastAI, t)}일째`; r.cls = 'y'; }
+    if (!check) {
+      const re = addDays(lastAI, K.cycle);
+      if (diff(t, re) >= -3) r.tasks.push({ date: re, type: '재발정 확인', hint: `${fmtD(lastAI)} 수정 후 ${K.cycle}일` });
+      r.tasks.push({ date: addDays(lastAI, K.checkDays), type: '임신감정', hint: `${fmtD(lastAI)} 수정 후 ${K.checkDays}일` });
+    }
+    r.tasks.push({ date: due, type: '분만예정', hint: `${fmtD(lastAI)} 수정` });
+    r.info = `수정일 ${lastAI}${aiCount > 1 ? ` · 이번 산차 ${aiCount}번째 수정` : ''}`;
+  } else if (lastHeat) {
+    let n = lastHeat; while (diff(t, n) < -2) n = addDays(n, K.cycle);
+    r.label = check === '공태' ? '공태(재수정 필요)' : '발정 관찰'; r.cls = check === '공태' ? 'r' : '';
+    r.tasks.push({ date: n, type: '발정예정', hint: `마지막 발정·수정 ${fmtD(lastHeat)}` });
+    r.info = `발정 주기 ${K.cycle}일로 계산한 예상일이에요.`;
+  } else if (lastCalving) {
+    const d = diff(lastCalving, t);
+    r.label = `분만 후 ${d}일`; r.cls = d >= K.postCalving ? 'y' : '';
+    r.tasks.push({ date: addDays(lastCalving, K.postCalving), type: '수정 시작', hint: `${fmtD(lastCalving)} 분만 후 ${K.postCalving}일` });
+  } else { r.label = '기록 없음'; }
+  return r;
+}
+
+async function addEvent(cowId, type, preset = {}) {
+  const c = cowById(cowId);
+  const F = { date: { k: 'date', label: '날짜', type: 'date', value: preset.date || today(), required: true }, note: { k: 'note', label: '메모 (선택)', type: 'textarea' } };
+  let fields;
+  switch (type) {
+    case '수정': fields = [F.date, { k: 'bull', label: '정액(종모우) 번호 (선택)', type: 'text', list: [...new Set(S.events.filter(e => e.bull).map(e => e.bull))] }, F.note]; break;
+    case '임신감정': fields = [F.date, { k: 'result', label: '결과', type: 'chips', options: ['임신', '공태'], value: '임신' }, F.note]; break;
+    case '분만': fields = [F.date, { k: 'calfSex', label: '송아지 성별', type: 'chips', options: ['암', '수'], value: '암' }, { k: 'calfTag', label: '송아지 귀표번호 (나중에 넣어도 돼요)', type: 'text', inputmode: 'numeric' }, { k: 'reg', label: '송아지를 소 목록에 바로 등록', type: 'check', value: true }, { k: 'note', label: '메모 (난산, 쌍둥이 등)', type: 'textarea' }]; break;
+    case '접종': fields = [F.date, { k: 'name', label: '백신', type: 'chips', options: Object.keys(VAX), value: preset.name || '구제역', other: true }, { k: 'next', label: '다음 접종일 (비우면 자동 계산)', type: 'date' }, F.note]; break;
+    case '구충': fields = [F.date, { k: 'name', label: '약 이름 (선택)', type: 'text', list: [...new Set(S.events.filter(e => e.type === '구충' && e.name).map(e => e.name))] }, { k: 'next', label: `다음 구충일 (비우면 ${DEWORM_MONTHS}개월 뒤)`, type: 'date' }, F.note]; break;
+    case '치료': fields = [F.date, { k: 'name', label: '증상 / 약', type: 'text', required: true }, F.note]; break;
+    case '체중': fields = [F.date, { k: 'kg', label: '체중 kg (체중계로 잰 값)', type: 'number', value: preset.kg }, { k: 'girth', label: '또는 흉위 cm (줄자)', type: 'number', value: preset.girth }, { k: 'len', label: '체장 cm (어깨 끝~엉덩이 끝)', type: 'number', value: preset.len }, F.note]; break;
+    case '출하': fields = [F.date, { k: 'kg', label: '생체중 또는 도체중 kg (선택)', type: 'number' }, { k: 'grade', label: '등급 (선택)', type: 'chips', options: ['1++', '1+', '1', '2', '3', '등외'], value: '' }, { k: 'price', label: '받은 금액 원 (선택)', type: 'number' }, { k: 'toLedger', label: '금액을 장부 수입에도 기록', type: 'check', value: true }, F.note]; break;
+    default: fields = [F.date, F.note];
+  }
+  const v = await form(`${EV[type] || ''} ${type} · ${short(c.tag)}번`, fields);
+  if (!v) return;
+  const e = { id: uid(), cowId, type, t: Date.now(), ...v };
+  if (type === '체중') {
+    if (!e.kg && e.girth && e.len) { e.kg = estWeight(+e.girth, +e.len); e.est = true; }
+    if (!e.kg) { alert('체중 또는 흉위·체장을 넣어 주세요.'); return; }
+    e.kg = +e.kg;
+  }
+  if ((type === '접종' || type === '구충') && !e.next) e.next = nextDose(type, e.name, e.date);
+  const reg = e.reg, toLedger = e.toLedger; delete e.reg; delete e.toLedger;
+  await saveEvents([e]);
+  if (type === '분만' && reg) {
+    const calf = { id: uid(), tag: (e.calfTag || '').replace(/\s/g, '') || `임시${Date.now().toString().slice(-4)}`, sex: e.calfSex, group: '송아지', birth: e.date, pen: c.pen, mother: c.tag, status: '사육', created: Date.now() };
+    await DB.put('cows', calf); S.cows.push(calf);
+    toast(e.calfTag ? '송아지를 등록했어요' : '송아지를 임시번호로 등록했어요. 귀표번호가 나오면 고쳐 주세요');
+  }
+  if (type === '출하') {
+    c.status = '출하'; await DB.put('cows', c);
+    if (toLedger && +e.price) await saveLedger({ id: uid(), date: e.date, kind: '수입', cat: '출하', amount: +e.price, memo: `${short(c.tag)}번 출하${e.grade ? ` ${e.grade}` : ''}` });
+  }
+  if (!(type === '분만' && reg)) toast('기록했어요');
+  render();
+}
+async function saveEvents(arr) { await DB.putMany('events', arr); S.events.push(...arr); }
+
+/* ================= 3. 방역·접종 ================= */
+const VAX = { '구제역': 6, '럼피스킨': 12, '유행열': 12, '아카바네': 12, '설사병': 12, '호흡기': 12 };
+const DEWORM_MONTHS = 6;
+function nextDose(type, name, date) {
+  if (type === '구충') return addMonths(date, DEWORM_MONTHS);
+  return VAX[name] ? addMonths(date, VAX[name]) : '';
+}
+function healthTasks(c) {
+  const last = {};
+  for (const e of eventsOf(c.id)) if (e.type === '접종' || e.type === '구충') last[e.type + ':' + (e.type === '구충' ? '' : e.name)] = e;
+  return Object.values(last).filter(e => e.next).map(e => ({ date: e.next, type: e.type === '구충' ? '구충' : `${e.name} 접종`, hint: `지난번 ${fmtD(e.date)}` }));
+}
+
+/* 홈: 할 일 모음 */
+function allTasks() {
+  const out = [], t = today();
+  for (const c of active()) {
+    const b = breeding(c);
+    const list = [...(b ? b.tasks : []), ...healthTasks(c)];
+    if (c.group === '비육우' && c.birth) list.push({ date: addMonths(c.birth, c.shipMonths || S.kv.shipMonths), type: '출하 목표', hint: `${c.shipMonths || S.kv.shipMonths}개월령` });
+    for (const x of list) {
+      const d = diff(t, x.date);
+      const ahead = x.type === '분만예정' || x.type === '출하 목표' ? 21 : 14;
+      if (d >= -60 && d <= ahead) out.push({ ...x, cow: c, d });
+    }
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function viewHome() {
+  const a = active(), t = today();
+  const preg = a.filter(c => breeding(c)?.pregnant).length;
+  const tasks = allTasks();
+  const groups = [['지난 일', x => x.d < 0], ['오늘', x => x.d === 0], ['이번 주', x => x.d > 0 && x.d <= 7], ['다음 주 이후', x => x.d > 7]];
+  // 같은 날, 같은 일(예: 구제역 접종)은 묶어서 보여 준다
+  const block = arr => {
+    const m = new Map();
+    for (const x of arr) { const k = x.date + '|' + x.type; if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
+    return [...m.values()].map(g => {
+      const x = g[0], cls = x.d < 0 ? 'over' : x.d <= 3 ? 'soon' : 'muted';
+      const one = y => `<li data-go="#/cow/${y.cow.id}"><div class="num ${sexCls(y.cow)}">${esc(short(y.cow.tag))}</div><div class="info"><div><b>${esc(y.type)}</b></div><div class="muted small">${esc(y.hint || '')}</div></div><div class="right"><div>${fmtD(y.date)}</div><div class="${cls}">${rel(y.date)}</div></div></li>`;
+      if (g.length <= 2) return g.map(one).join('');
+      const health = /접종|구충/.test(x.type);
+      return `<li class="grp"><details><summary><div class="num">${g.length}<span class="small">두</span></div><div class="info"><div><b>${esc(x.type)}</b> <span class="muted small">▾ 펼치기</span></div><div class="muted small">${g.slice(0, 6).map(y => short(y.cow.tag)).join(', ')}${g.length > 6 ? ' …' : ''}</div></div><div class="right"><div>${fmtD(x.date)}</div><div class="${cls}">${rel(x.date)}</div></div></summary>
+        ${health ? `<button class="btn block sm" data-act="taskGroup" data-k="${esc(x.date + '|' + x.type)}" style="margin:6px 0">✅ ${g.length}마리 한꺼번에 기록</button>` : ''}<ul class="list" style="padding-left:12px">${g.map(one).join('')}</ul></details></li>`;
+    }).join('');
+  };
+  homeTaskIndex = tasks;
+  const lb = S.kv.lastBackup, needBackup = S.cows.length && (!lb || diff(lb.slice(0, 10), t) >= 14);
+  return `<h1>${esc(S.kv.farm || '한우 수첩')}</h1><p class="sub">${t.replace(/-/g, '.')} (${'일월화수목금토'[new Date().getDay()]})</p>
+  ${heatBanner()}
+  ${needBackup ? `<div class="msg">💾 ${lb ? `마지막 백업이 ${diff(lb.slice(0, 10), t)}일 전이에요.` : '아직 백업을 한 번도 안 했어요.'} 기록은 이 폰에만 저장되니 <a href="#/settings">백업</a>해 두세요.</div>` : ''}
+  <div class="card"><div class="stats">
+    <div><b>${a.length}</b><span>사육 두수</span></div>
+    <div><b>${a.filter(c => isBreeder(c)).length}</b><span>번식·후보</span></div>
+    <div><b>${preg}</b><span>임신우</span></div>
+    <div><b>${a.filter(c => c.group === '송아지').length}</b><span>송아지</span></div>
+  </div></div>
+  ${!S.cows.length ? `<div class="card"><h2>처음 오셨네요 👋</h2><p class="muted">소를 한 마리씩 등록하면 번식·접종·출하 일정이 여기에 자동으로 모입니다.</p><button class="btn block" data-act="newCow">＋ 첫 소 등록하기</button></div>` : ''}
+  <div class="card"><h2>할 일</h2>
+  ${tasks.length ? groups.map(([name, fn]) => { const g = tasks.filter(fn); return g.length ? `<h3>${name} (${g.length})</h3><ul class="list">${block(g)}</ul>` : ''; }).join('') : '<p class="muted">앞으로 2주 안에 예정된 일이 없어요.</p>'}
+  </div>
+  <p class="note">할 일은 기록한 날짜로 계산돼요. 해당 기록(예: 임신감정, 접종)을 넣으면 목록에서 사라집니다.</p>`;
+}
+let homeTaskIndex = [];
+
+/* 여러 마리 한꺼번에 기록 (100두 접종 등) */
+const bulk = { type: '접종', group: '전체', pen: '', sel: new Set() };
+function viewBulk() {
+  const list = active().filter(c => (bulk.group === '전체' || c.group === bulk.group) && (!bulk.pen || c.pen === bulk.pen))
+    .sort((a, b) => (a.pen || '').localeCompare(b.pen || '', 'ko', { numeric: true }) || short(a.tag).localeCompare(short(b.tag)));
+  const pens = [...new Set(active().map(c => c.pen).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+  const n = list.filter(c => bulk.sel.has(c.id)).length;
+  bulk.visible = list.map(c => c.id);
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/cows">← 목록</a></div>
+  <h1>여러 마리 기록</h1><p class="sub">일제 접종·구충처럼 같은 일을 여러 마리에 한 번에 기록해요.</p>
+  <div class="card"><h2>1. 무엇을</h2><div class="chips">${['접종', '구충', '치료', '메모'].map(x => `<button class="chip ${bulk.type === x ? 'on' : ''}" data-act="bType" data-v="${x}">${EV[x]} ${x}</button>`).join('')}</div></div>
+  <div class="card"><h2>2. 어떤 소에게 <span class="badge g" id="bCount">${n}마리 선택</span></h2>
+    <div class="chips">${['전체', ...GROUPS].map(g => `<button class="chip ${bulk.group === g ? 'on' : ''}" data-act="bGroup" data-v="${g}">${g}</button>`).join('')}</div>
+    <select id="bPen"><option value="">모든 칸</option>${pens.map(p => `<option ${bulk.pen === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>
+    <div class="grid2" style="margin:10px 0"><button class="btn ghost sm" data-act="bAll">모두 선택</button><button class="btn ghost sm" data-act="bNone">모두 해제</button></div>
+    <div class="pick">${list.map(c => `<label><input type="checkbox" data-bsel="${c.id}" ${bulk.sel.has(c.id) ? 'checked' : ''}><b style="min-width:52px">${esc(short(c.tag))}</b><span class="muted small">${esc([c.name, c.group, c.pen].filter(Boolean).join(' · '))}</span></label>`).join('') || '<p class="muted">해당하는 소가 없어요.</p>'}</div>
+  </div>
+  <button class="btn block" id="bGoBtn" data-act="bGo" ${n ? '' : 'disabled'}>3. ${n}마리에 ${bulk.type} 기록하기 →</button>`;
+}
+async function bulkGo() {
+  const ids = active().filter(c => bulk.sel.has(c.id) && (bulk.group === '전체' || c.group === bulk.group) && (!bulk.pen || c.pen === bulk.pen)).map(c => c.id);
+  if (!ids.length) return;
+  const type = bulk.type, F = [{ k: 'date', label: '날짜', type: 'date', value: today(), required: true }];
+  if (type === '접종') F.push({ k: 'name', label: '백신', type: 'chips', options: Object.keys(VAX), value: bulk.name && bulk.type === '접종' ? bulk.name : '구제역', other: true }, { k: 'next', label: '다음 접종일 (비우면 자동)', type: 'date' });
+  if (type === '구충') F.push({ k: 'name', label: '약 이름 (선택)', type: 'text' }, { k: 'next', label: `다음 구충일 (비우면 ${DEWORM_MONTHS}개월 뒤)`, type: 'date' });
+  if (type === '치료') F.push({ k: 'name', label: '증상 / 약', type: 'text', required: true });
+  F.push({ k: 'note', label: '메모 (선택)', type: 'textarea' });
+  const v = await form(`${EV[type]} ${ids.length}마리 ${type}`, F, { saveText: `${ids.length}마리 저장` });
+  if (!v) return;
+  const t0 = Date.now();
+  const arr = ids.map((cowId, i) => { const e = { id: uid() + i, cowId, type, t: t0, ...v }; if ((type === '접종' || type === '구충') && !e.next) e.next = nextDose(type, e.name, e.date); return e; });
+  await saveEvents(arr); bulk.sel.clear(); bulk.name = '';
+  toast(`${arr.length}마리 기록했어요`); location.hash = '#/';
+}
+
+/* ================= 4. 체중 추정 ================= */
+// Schaeffer 공식: 체중(kg) ≈ 흉위(cm)² × 체장(cm) ÷ 10838  (± 10% 안팎의 어림값)
+const estWeight = (girth, len) => Math.round(girth * girth * len / 10838 * (S.kv.wFactor || 1));
+function viewWeight() {
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/tools">← 도구</a></div>
+  <h1>⚖️ 체중 추정</h1><p class="sub">체중계가 없을 때 줄자로 잰 값으로 어림합니다.</p>
+  <div class="card">
+    <div class="grid2"><label class="field" style="margin-top:0"><span>흉위 cm</span><input type="number" id="wG" inputmode="decimal" placeholder="예: 190"></label>
+    <label class="field" style="margin-top:0"><span>체장 cm</span><input type="number" id="wL" inputmode="decimal" placeholder="예: 160"></label></div>
+    <div style="text-align:center;margin:16px 0 4px"><div class="muted">추정 체중</div><div class="big-tag" id="wOut">- kg</div><div class="muted small" id="wRange"></div></div>
+    <label class="field"><span>이 값을 기록할 소 (귀표 끝자리)</span><input type="text" id="wCow" list="cowList" inputmode="numeric" placeholder="예: 1234"></label>
+    <datalist id="cowList">${active().map(c => `<option value="${esc(short(c.tag))}">${esc([c.name, c.group, c.pen].filter(Boolean).join(' · '))}</option>`).join('')}</datalist>
+    <button class="btn block" style="margin-top:12px" data-act="wSave">이 소에 체중 기록</button>
+  </div>
+  <div class="card"><h2>재는 법</h2>
+    <p><b>흉위</b>: 앞다리 바로 뒤, 가슴을 한 바퀴 두른 둘레</p>
+    <p><b>체장</b>: 어깨 끝(어깨뼈 앞 돌출부)부터 엉덩이 끝(좌골 끝)까지 직선 길이</p>
+    <p class="muted small">소가 똑바로 섰을 때, 숨을 내쉰 순간에 재면 오차가 줄어요.</p></div>
+  <div class="card"><h2>보정</h2><p class="muted small">한 번이라도 체중계로 잰 소가 있으면, 같은 소의 추정값과 비교해 보정 계수를 맞출 수 있어요. 지금 계수: <b>${(S.kv.wFactor || 1).toFixed(3)}</b></p>
+    <button class="btn ghost block" data-act="wCal">실측값으로 보정하기</button></div>
+  <p class="note">계산식: 흉위² × 체장 ÷ 10838 (Schaeffer 공식). 소의 체형·비육 정도에 따라 10% 안팎 차이가 날 수 있는 어림값입니다.</p>`;
+}
+function findCowByShort(s) {
+  s = String(s || '').replace(/\D/g, ''); if (!s) return [];
+  return active().filter(c => c.tag.replace(/\D/g, '').endsWith(s));
+}
+
+/* ================= 5. 출하 관리 ================= */
+function viewShip() {
+  const t = today();
+  const list = active().filter(c => c.group === '비육우' && c.birth).map(c => {
+    const m = c.shipMonths || S.kv.shipMonths, date = addMonths(c.birth, m);
+    const w = eventsOf(c.id).filter(e => e.type === '체중').pop();
+    return { c, m, date, d: diff(t, date), age: ageMonths(c.birth), w };
+  }).sort((a, b) => a.date.localeCompare(b.date));
+  const yr = t.slice(0, 4);
+  const shipped = S.events.filter(e => e.type === '출하' && e.date.startsWith(yr));
+  const sum = shipped.reduce((s, e) => s + (+e.price || 0), 0);
+  const grades = {}; for (const e of shipped) if (e.grade) grades[e.grade] = (grades[e.grade] || 0) + 1;
+  const noBirth = active().filter(c => c.group === '비육우' && !c.birth).length;
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/tools">← 도구</a></div>
+  <h1>🚚 출하 관리</h1><p class="sub">비육우를 출하 목표일 순으로 보여 줘요. 기본 목표 ${S.kv.shipMonths}개월령(설정에서 변경)</p>
+  <div class="card"><h2>${yr}년 출하 실적</h2><div class="stats" style="grid-template-columns:repeat(2,1fr)">
+    <div><b>${shipped.length}</b><span>출하 두수</span></div><div><b style="font-size:1.15rem">${won(sum)}</b><span>받은 금액</span></div></div>
+    ${Object.keys(grades).length ? `<p class="muted small" style="margin:10px 0 0">등급: ${['1++', '1+', '1', '2', '3', '등외'].filter(g => grades[g]).map(g => `${g} ${grades[g]}두`).join(' · ')}</p>` : ''}
+    ${shipped.length && sum ? `<p class="muted small" style="margin:4px 0 0">두당 평균 ${won(sum / shipped.filter(e => +e.price).length)}</p>` : ''}
+  </div>
+  <div class="card"><h2>출하 예정 (${list.length}두)</h2>
+  ${list.length ? `<ul class="list">${list.map(x => `<li data-go="#/cow/${x.c.id}"><div class="num ${sexCls(x.c)}">${esc(short(x.c.tag))}</div><div class="info"><div><b>${x.age}개월</b> <span class="muted small">/ 목표 ${x.m}개월</span></div><div class="bar"><div style="width:${Math.max(0, Math.min(100, x.age / x.m * 100))}%"></div></div><div class="muted small">${x.w ? `최근 ${x.w.kg}kg (${fmtD(x.w.date)})` : '체중 기록 없음'}${x.c.pen ? ` · ${esc(x.c.pen)}` : ''}</div></div><div class="right"><div>${fmtD(x.date)}</div><div class="${x.d < 0 ? 'over' : x.d <= 30 ? 'soon' : 'muted'}">${x.d < 0 ? `${-x.d}일 지남` : `${x.d}일 남음`}</div></div></li>`).join('')}</ul>` : '<p class="muted">구분이 “비육우”이고 생년월일이 있는 소가 여기에 나와요.</p>'}
+  ${noBirth ? `<p class="msg" style="margin-top:10px">생년월일이 없는 비육우 ${noBirth}두는 목록에서 빠졌어요.</p>` : ''}
+  </div>
+  <div class="card"><h2>한우 시세 보기</h2><p class="muted small">경락가격은 아래 공식 사이트에서 확인하세요. (앱 안으로 바로 불러오려면 공공데이터 인증키와 중계 서버가 필요해서 지금은 바로가기로 연결해요.)</p>
+    <div class="grid2"><a class="btn ghost" href="https://www.ekapepia.com" target="_blank" rel="noopener">축산유통정보</a><a class="btn ghost" href="https://www.ekape.or.kr" target="_blank" rel="noopener">축산물품질평가원</a></div></div>
+  <p class="note">출하하면 소 화면에서 “🚚 출하”를 기록하세요. 상태가 ‘출하’로 바뀌고, 금액을 넣으면 장부 수입에도 자동으로 들어갑니다.</p>`;
+}
+
+/* ================= 6. 사료·비용 장부 ================= */
+const CATS = {
+  '지출': ['사료', '조사료(볏짚 등)', '약품·진료', '정액·수정', '송아지 입식', '인건비', '전기·연료', '장비·수리', '기타'],
+  '수입': ['출하', '송아지 판매', '소 판매', '보조금', '기타'],
+};
+let ledgerMonth = today().slice(0, 7);
+async function saveLedger(x) { await DB.put('ledger', x); const i = S.ledger.findIndex(y => y.id === x.id); if (i >= 0) S.ledger[i] = x; else S.ledger.push(x); }
+function viewLedger() {
+  const m = ledgerMonth, items = S.ledger.filter(x => x.date.startsWith(m)).sort((a, b) => b.date.localeCompare(a.date));
+  const sumK = k => items.filter(x => x.kind === k).reduce((s, x) => s + x.amount, 0);
+  const inc = sumK('수입'), out = sumK('지출');
+  const byCat = {}; for (const x of items.filter(x => x.kind === '지출')) byCat[x.cat] = (byCat[x.cat] || 0) + x.amount;
+  const yr = m.slice(0, 4), yItems = S.ledger.filter(x => x.date.startsWith(yr));
+  const yIn = yItems.filter(x => x.kind === '수입').reduce((s, x) => s + x.amount, 0), yOut = yItems.filter(x => x.kind === '지출').reduce((s, x) => s + x.amount, 0);
+  const [Y, M] = m.split('-').map(Number);
+  return `<h1>💰 장부</h1><p class="sub">사료비·약값부터 출하 수입까지 기록해요.</p>
+  <div class="monthnav"><button class="btn ghost sm" data-act="lMonth" data-v="-1">◀</button><b>${Y}년 ${M}월</b><button class="btn ghost sm" data-act="lMonth" data-v="1">▶</button></div>
+  <div class="card"><div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div><b class="money-in" style="font-size:1rem">${won(inc)}</b><span>수입</span></div>
+    <div><b class="money-out" style="font-size:1rem">${won(out)}</b><span>지출</span></div>
+    <div><b style="font-size:1rem">${won(inc - out)}</b><span>차액</span></div></div>
+    ${Object.keys(byCat).length ? `<h3>지출 내역</h3>${Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div style="margin-top:8px"><div class="row"><span class="grow">${esc(k)}</span><b>${won(v)}</b></div><div class="bar"><div style="width:${v / out * 100}%;background:var(--danger)"></div></div></div>`).join('')}` : ''}
+    <p class="muted small" style="margin:12px 0 0">${yr}년 누계: 수입 ${won(yIn)} · 지출 ${won(yOut)} · 차액 ${won(yIn - yOut)}</p>
+  </div>
+  <div class="grid2" style="margin-bottom:14px"><button class="btn danger" data-act="lAdd" data-v="지출">－ 지출 기록</button><button class="btn" data-act="lAdd" data-v="수입" style="background:var(--blue)">＋ 수입 기록</button></div>
+  <div class="card"><h2>${M}월 기록 (${items.length})</h2>
+  ${items.length ? `<ul class="list">${items.map(x => `<li data-act="lEdit" data-id="${x.id}"><div class="info"><div><b>${esc(x.cat)}</b>${x.qty ? ` <span class="muted small">${esc(x.qty)}</span>` : ''}</div><div class="muted small">${fmtD(x.date)}${x.memo ? ' · ' + esc(x.memo) : ''}</div></div><div class="right ${x.kind === '수입' ? 'money-in' : 'money-out'}">${x.kind === '수입' ? '+' : '-'}${won(x.amount)}</div></li>`).join('')}</ul>` : '<p class="muted">이 달 기록이 없어요.</p>'}
+  </div>
+  <button class="btn ghost block" data-act="lCsv">📄 엑셀용 CSV로 내보내기 (${yr}년)</button>`;
+}
+async function editLedger(kind, x) {
+  const isNew = !x; x = x || { kind, date: today() };
+  const v = await form(`${x.kind} ${isNew ? '기록' : '수정'}`, [
+    { k: 'date', label: '날짜', type: 'date', value: x.date, required: true },
+    { k: 'cat', label: '항목', type: 'chips', options: CATS[x.kind], value: x.cat || CATS[x.kind][0] },
+    { k: 'amount', label: '금액 (원)', type: 'number', value: x.amount, required: true, inputmode: 'numeric' },
+    { k: 'qty', label: '수량 (선택, 예: 25kg×40포, 볏짚 30롤)', type: 'text', value: x.qty },
+    { k: 'memo', label: '메모 (선택, 거래처 등)', type: 'text', value: x.memo },
+  ], { del: !isNew });
+  if (!v) return;
+  if (v === 'DELETE') { if (!confirm('이 기록을 지울까요?')) return; await DB.del('ledger', x.id); S.ledger = S.ledger.filter(y => y.id !== x.id); render(); return; }
+  await saveLedger({ ...x, ...v, amount: +v.amount, id: x.id || uid() });
+  ledgerMonth = v.date.slice(0, 7); toast('저장했어요'); render();
+}
+function download(name, text, type) {
+  const blob = new Blob([text], { type }); const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  return blob;
+}
+const csvCell = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+const toCsv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+
+/* ================= 7. 더위 경보 (THI) ================= */
+// 온습도지수 THI = (1.8T+32) − (0.55 − 0.0055·RH)·(1.8T − 26)
+const thi = (T, RH) => (1.8 * T + 32) - (0.55 - 0.0055 * RH) * (1.8 * T - 26);
+const LEVELS = [
+  { max: 72, name: '정상', tip: '평소대로 관리하세요.' },
+  { max: 79, name: '주의', tip: '물을 충분히 주고 환기팬을 켜세요.' },
+  { max: 89, name: '경고', tip: '송풍·안개분무를 하고, 사료는 서늘한 아침·저녁에 주세요. 사육 밀도를 낮추세요.' },
+  { max: 99, name: '위험', tip: '지붕 물 뿌리기·차광막 등으로 온도를 낮추고, 헐떡이거나 침을 흘리는 소를 수시로 살피세요.' },
+  { max: 999, name: '매우 위험', tip: '폐사 위험이 큽니다. 모든 냉방 수단을 쓰고, 이상이 보이면 바로 수의사를 부르세요.' },
+];
+const level = v => LEVELS.findIndex(l => v < l.max);
+async function fetchHeat(force) {
+  const K = S.kv; if (K.lat == null) return null;
+  if (!force && S.heat && Date.now() - S.heat.at < 2 * 3600e3 && S.heat.lat === K.lat && S.heat.lon === K.lon) return S.heat;
+  const u = `https://api.open-meteo.com/v1/forecast?latitude=${K.lat}&longitude=${K.lon}&hourly=temperature_2m,relative_humidity_2m&current=temperature_2m,relative_humidity_2m&timezone=Asia%2FSeoul&forecast_days=3`;
+  const r = await fetch(u); if (!r.ok) throw new Error('날씨를 불러오지 못했어요 (' + r.status + ')');
+  const j = await r.json();
+  const hours = j.hourly.time.map((tm, i) => ({ tm, T: j.hourly.temperature_2m[i], RH: j.hourly.relative_humidity_2m[i] })).map(h => ({ ...h, v: thi(h.T, h.RH) }));
+  S.heat = { at: Date.now(), lat: K.lat, lon: K.lon, cur: { T: j.current.temperature_2m, RH: j.current.relative_humidity_2m, v: thi(j.current.temperature_2m, j.current.relative_humidity_2m) }, hours };
+  await setKV('heatCache', S.heat); return S.heat;
+}
+function heatBanner() {
+  const h = S.heat; if (!h) return '';
+  const t = today(), todays = h.hours.filter(x => x.tm.startsWith(t)); if (!todays.length) return '';
+  const mx = todays.reduce((a, b) => b.v > a.v ? b : a);
+  const lv = level(mx.v); if (lv === 0) return '';
+  return `<div class="heat lv${lv}" data-go="#/heat">🌡️ 오늘 더위 ${LEVELS[lv].name} · 최고 THI ${mx.v.toFixed(0)} (${+mx.tm.slice(11, 13)}시, ${mx.T.toFixed(0)}℃)<div style="font-weight:500;font-size:.9rem;margin-top:4px">${LEVELS[lv].tip}</div></div>`;
+}
+function viewHeat() {
+  const K = S.kv, h = S.heat;
+  let body = '';
+  if (K.lat == null) body = `<div class="card"><h2>농장 위치를 먼저 정해 주세요</h2><p class="muted">우사에서 아래 버튼을 누르면 현재 위치를 농장 위치로 저장해요. 위치는 날씨 조회에만 쓰여요.</p><button class="btn block" data-act="hLoc">📍 지금 위치를 농장으로</button></div>`;
+  else if (!h) body = `<div class="card"><p>날씨를 불러오는 중…</p></div>`;
+  else {
+    const days = {}; for (const x of h.hours) (days[x.tm.slice(0, 10)] ||= []).push(x);
+    const lv = level(h.cur.v);
+    const now = new Date(), nowKey = `${today()}T${pad(now.getHours())}`;
+    body = `<div class="heat lv${lv}"><div style="font-size:.9rem;font-weight:500">지금 (${new Date(h.at).getHours()}시 ${pad(new Date(h.at).getMinutes())}분 조회)</div><div style="font-size:2.2rem;line-height:1.2">THI ${h.cur.v.toFixed(0)} · ${LEVELS[lv].name}</div><div style="font-weight:500">${h.cur.T.toFixed(1)}℃ · 습도 ${h.cur.RH}%</div><div style="font-weight:500;margin-top:6px">${LEVELS[lv].tip}</div></div>
+    ${Object.entries(days).map(([d, hs]) => { const mx = hs.reduce((a, b) => b.v > a.v ? b : a), l = level(mx.v); const shown = hs.filter(x => x.tm >= nowKey || d !== today()); return `<div class="card"><h2>${fmtD(d)} ${d === today() ? '오늘' : ''} <span class="badge lv${l}" style="color:#fff">최고 ${mx.v.toFixed(0)} ${LEVELS[l].name}</span></h2><div class="hours">${shown.map(x => `<div class="lv${level(x.v)}">${+x.tm.slice(11, 13)}시<b>${x.v.toFixed(0)}</b>${x.T.toFixed(0)}℃</div>`).join('')}</div></div>`; }).join('')}
+    <button class="btn ghost block" data-act="hRefresh">🔄 새로 불러오기</button>`;
+  }
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/tools">← 도구</a></div>
+  <h1>🌡️ 더위 경보</h1><p class="sub">기온과 습도로 소가 느끼는 더위(온습도지수, THI)를 계산해요.${K.lat != null ? ` · ${esc(K.place || `${(+K.lat).toFixed(2)}, ${(+K.lon).toFixed(2)}`)}` : ''}</p>
+  ${body}
+  <div class="card"><h2>단계 기준 (THI)</h2>${LEVELS.map((l, i) => `<div class="kv"><span><span class="badge lv${i}" style="color:#fff">${l.name}</span></span><b>${i === 0 ? '72 미만' : i === 4 ? '99 이상' : `${LEVELS[i - 1].max}~${l.max - 1}`}</b></div>`).join('')}</div>
+  ${K.lat != null ? '<button class="btn ghost block" data-act="hLoc">📍 농장 위치 다시 정하기</button>' : ''}
+  <p class="note">날씨: Open-Meteo 예보. 단계 기준은 소 고온 스트레스에 흔히 쓰이는 THI 구간(Armstrong, 1994)을 따랐어요. 우사 안은 바깥보다 더 더울 수 있어요.</p>`;
+}
+
+/* ================= 도구 · 설정 · 백업 ================= */
+function viewTools() {
+  const t = (href, icon, title, desc) => `<a class="card row" href="${href}" style="text-decoration:none;color:inherit"><span style="font-size:2rem">${icon}</span><span class="grow"><b>${title}</b><br><span class="muted small">${desc}</span></span><span class="muted">›</span></a>`;
+  return `<h1>도구</h1><p class="sub">　</p>
+  ${t('#/bulk', '✅', '여러 마리 기록', '일제 접종·구충을 한 번에')}
+  ${t('#/weight', '⚖️', '체중 추정', '흉위·체장으로 몸무게 어림')}
+  ${t('#/ship', '🚚', '출하 관리', '출하 예정 순서·실적·시세')}
+  ${t('#/heat', '🌡️', '더위 경보', '온습도지수(THI) 예보')}
+  ${t('#/settings', '⚙️', '설정 · 백업', '계산 기준, 데이터 내보내기')}`;
+}
+function viewSettings() {
+  const K = S.kv;
+  return `<div class="row" style="margin-bottom:8px"><a class="btn ghost sm" href="#/tools">← 도구</a></div>
+  <h1>⚙️ 설정 · 백업</h1><p class="sub">　</p>
+  <div class="card"><h2>💾 백업</h2>
+    <p class="muted small">모든 기록은 <b>이 폰 안에만</b> 저장돼요. 폰을 바꾸거나 잃어버리면 사라지니, 백업 파일을 카카오톡 ‘나와의 채팅’이나 메일로 보내 두세요.<br>마지막 백업: <b>${K.lastBackup ? esc(K.lastBackup.replace('T', ' ').slice(0, 16)) : '없음'}</b></p>
+    <button class="btn block" data-act="backup">백업 파일 만들기 (사진 포함)</button>
+    <label class="btn ghost block" style="margin-top:8px" for="restoreIn">백업 파일에서 되살리기</label><input type="file" id="restoreIn" accept=".json,application/json" class="hidden">
+    <button class="btn ghost block" style="margin-top:8px" data-act="cowCsv">소 목록 엑셀(CSV)로 내보내기</button>
+  </div>
+  <div class="card"><h2>계산 기준</h2>
+    <label class="field" style="margin-top:0"><span>농장 이름 (홈 제목)</span><input type="text" data-kv="farm" value="${esc(K.farm)}" placeholder="예: 행복한우농장"></label>
+    <div class="grid2">
+    <label class="field"><span>임신 기간 (일)</span><input type="number" data-kv="gest" value="${K.gest}"></label>
+    <label class="field"><span>발정 주기 (일)</span><input type="number" data-kv="cycle" value="${K.cycle}"></label>
+    <label class="field"><span>임신감정 (수정 후 일)</span><input type="number" data-kv="checkDays" value="${K.checkDays}"></label>
+    <label class="field"><span>분만 후 수정 시작 (일)</span><input type="number" data-kv="postCalving" value="${K.postCalving}"></label>
+    <label class="field"><span>출하 목표 월령</span><input type="number" data-kv="shipMonths" value="${K.shipMonths}"></label>
+    <label class="field"><span>체중 보정 계수</span><input type="number" step="0.001" data-kv="wFactor" value="${K.wFactor}"></label>
+    </div>
+    <p class="muted small" style="margin:10px 0 0">접종 주기: ${Object.entries(VAX).map(([k, v]) => `${k} ${v}개월`).join(', ')}, 구충 ${DEWORM_MONTHS}개월. 다른 주기가 필요하면 기록할 때 ‘다음 접종일’을 직접 넣으세요.</p>
+  </div>
+  <div class="card"><h2>위험 구역</h2><button class="btn danger block" data-act="wipe">모든 데이터 지우기</button></div>
+  <p class="note">한우 수첩 · 서버 없이 이 폰에서만 동작합니다 (더위 경보의 날씨 조회만 인터넷 사용).</p>`;
+}
+const blobToData = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+async function makeBackup() {
+  const photos = await DB.all('photos');
+  const data = { app: 'hanwoo', ver: 1, at: new Date().toISOString(), cows: S.cows, events: S.events, ledger: S.ledger, kv: Object.fromEntries(Object.entries(S.kv).filter(([k]) => k !== 'heatCache')), photos: await Promise.all(photos.map(async p => ({ id: p.id, data: await blobToData(p.blob) }))) };
+  const name = `한우수첩-백업-${today()}.json`, text = JSON.stringify(data);
+  const file = new File([text], name, { type: 'application/json' });
+  let shared = false;
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); shared = true; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  if (!shared) download(name, text, 'application/json');
+  await setKV('lastBackup', new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString());
+  toast(`백업 완료 (소 ${S.cows.length}, 기록 ${S.events.length}건)`); render();
+}
+async function restore(file) {
+  let d; try { d = JSON.parse(await file.text()); } catch { alert('백업 파일을 읽지 못했어요.'); return; }
+  if (d.app !== 'hanwoo') { alert('한우 수첩 백업 파일이 아니에요.'); return; }
+  if (!confirm(`백업(${(d.at || '').slice(0, 10)}, 소 ${d.cows.length}마리, 기록 ${d.events.length}건)으로 되살릴까요?\n지금 폰에 있는 데이터는 모두 바뀝니다.`)) return;
+  for (const s of STORES) await DB.clear(s);
+  await DB.putMany('cows', d.cows); await DB.putMany('events', d.events); await DB.putMany('ledger', d.ledger || []);
+  await DB.putMany('kv', Object.entries(d.kv || {}).map(([k, v]) => ({ k, v })));
+  const photos = await Promise.all((d.photos || []).map(async p => ({ id: p.id, blob: await (await fetch(p.data)).blob() })));
+  await DB.putMany('photos', photos);
+  for (const k in photoUrls) delete photoUrls[k];
+  S.kv = { ...DEFAULTS }; await loadAll(); toast('되살렸어요'); location.hash = '#/';
+}
+
+/* ================= 공용 입력 시트 ================= */
+function form(title, fields, opt = {}) {
+  return new Promise(resolve => {
+    const bg = document.createElement('div'); bg.className = 'sheet-bg';
+    const fid = 'f' + uid();
+    bg.innerHTML = `<form class="sheet" id="${fid}" novalidate><h2>${esc(title)}</h2>${fields.map(f => {
+      const v = f.value ?? '';
+      if (f.type === 'chips') return `<div class="field" style="margin-top:12px"><div class="muted small" style="margin-bottom:6px">${esc(f.label)}</div><div class="chips" data-chips="${f.k}">${f.options.map(o => `<button type="button" class="chip ${o === v ? 'on' : ''}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}${f.other ? `<button type="button" class="chip ${v && !f.options.includes(v) ? 'on' : ''}" data-v="__other">기타</button>` : ''}</div>${f.other ? `<input type="text" data-other="${f.k}" placeholder="직접 입력" class="${v && !f.options.includes(v) ? '' : 'hidden'}" value="${f.options.includes(v) ? '' : esc(v)}">` : ''}</div>`;
+      if (f.type === 'check') return `<label class="check"><input type="checkbox" name="${f.k}" ${v ? 'checked' : ''}>${esc(f.label)}</label>`;
+      if (f.type === 'textarea') return `<label class="field"><span>${esc(f.label)}</span><textarea name="${f.k}">${esc(v)}</textarea></label>`;
+      const lid = f.list ? 'dl' + uid() : '';
+      return `<label class="field"><span>${esc(f.label)}</span><input type="${f.type}" name="${f.k}" value="${esc(v)}" ${f.inputmode ? `inputmode="${f.inputmode}"` : f.type === 'number' ? 'inputmode="decimal"' : ''} ${f.ph ? `placeholder="${esc(f.ph)}"` : ''} ${lid ? `list="${lid}"` : ''} autocomplete="off">${lid ? `<datalist id="${lid}">${f.list.map(o => `<option value="${esc(o)}">`).join('')}</datalist>` : ''}</label>`;
+    }).join('')}
+    ${opt.del ? '<button type="button" class="btn ghost block" data-del style="margin-top:18px;color:var(--danger)">🗑 삭제</button>' : ''}
+    <div class="foot"><button type="button" class="btn ghost" data-cancel>취소</button><button type="submit" class="btn">${esc(opt.saveText || '저장')}</button></div></form>`;
+    document.body.appendChild(bg);
+    const fm = bg.querySelector('form'), close = r => { bg.remove(); resolve(r); };
+    bg.addEventListener('click', e => {
+      if (e.target === bg || e.target.closest('[data-cancel]')) return close(null);
+      if (e.target.closest('[data-del]')) return close('DELETE');
+      const ch = e.target.closest('[data-chips] .chip');
+      if (ch) {
+        const box = ch.parentElement, k = box.dataset.chips, on = ch.classList.contains('on');
+        box.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+        const fdef = fields.find(f => f.k === k);
+        if (!(on && fdef.value === '')) ch.classList.add('on'); // 값이 비어도 되는 칩(등급 등)은 다시 누르면 해제
+        const oth = fm.querySelector(`[data-other="${k}"]`); if (oth) { oth.classList.toggle('hidden', ch.dataset.v !== '__other' || !ch.classList.contains('on')); if (!oth.classList.contains('hidden')) oth.focus(); }
+      }
+    });
+    fm.addEventListener('submit', e => {
+      e.preventDefault(); const out = {};
+      for (const f of fields) {
+        if (f.type === 'chips') { const on = fm.querySelector(`[data-chips="${f.k}"] .chip.on`); out[f.k] = on ? (on.dataset.v === '__other' ? fm.querySelector(`[data-other="${f.k}"]`).value.trim() : on.dataset.v) : ''; }
+        else if (f.type === 'check') out[f.k] = fm.elements[f.k].checked;
+        else out[f.k] = fm.elements[f.k].value.trim();
+        if (f.required && !out[f.k]) { alert(`‘${f.label}’을(를) 입력해 주세요.`); return; }
+      }
+      close(out);
+    });
+    const first = fm.querySelector('input[type=text],input[type=number]'); if (first && !first.value) setTimeout(() => first.focus(), 50);
+  });
+}
+
+/* ================= 화면 전환 · 이벤트 ================= */
+function render() {
+  const h = location.hash || '#/', [, page, arg] = h.split('/');
+  const tab = { '': 'home', cows: 'cows', cow: 'cows', bulk: 'cows', ledger: 'ledger' }[page] ?? 'tools';
+  document.querySelectorAll('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
+  const v = { '': viewHome, cows: viewCows, cow: () => viewCow(arg), bulk: viewBulk, ledger: viewLedger, tools: viewTools, weight: viewWeight, ship: viewShip, heat: viewHeat, settings: viewSettings }[page] || viewHome;
+  const y = render.last === h ? scrollY : 0; render.last = h;
+  $('#app').innerHTML = v(); scrollTo(0, y);
+  if (page === 'heat' && S.kv.lat != null && (!S.heat || Date.now() - S.heat.at > 2 * 3600e3)) fetchHeat().then(render, e => toast(e.message));
+}
+window.addEventListener('hashchange', render);
+
+document.addEventListener('click', async e => {
+  const go = e.target.closest('[data-go]'); const a = e.target.closest('[data-act]');
+  if (a && (!go || go.contains(a))) {
+    const act = a.dataset.act, d = a.dataset;
+    switch (act) {
+      case 'newCow': return editCow();
+      case 'editCow': return editCow(cowById(d.id));
+      case 'addEv': return addEvent(d.id, d.type);
+      case 'delEv': { const ev = S.events.find(x => x.id === d.id); if (!ev || !confirm(`${ev.date} ${ev.type} 기록을 지울까요?`)) return; await DB.del('events', ev.id); S.events = S.events.filter(x => x.id !== ev.id); return render(); }
+      case 'fgroup': cowFilter.group = d.v; return render();
+      case 'taskGroup': {
+        const [date, type] = d.k.split('|'); const g = homeTaskIndex.filter(x => x.date === date && x.type === type);
+        bulk.type = type === '구충' ? '구충' : '접종'; bulk.name = type.replace(/ 접종$/, ''); bulk.group = '전체'; bulk.pen = '';
+        bulk.sel = new Set(g.map(x => x.cow.id));
+        location.hash = '#/bulk'; return;
+      }
+      case 'bType': bulk.type = d.v; bulk.name = ''; return render();
+      case 'bGroup': bulk.group = d.v; return render();
+      case 'bAll': document.querySelectorAll('[data-bsel]').forEach(x => bulk.sel.add(x.dataset.bsel)); return render();
+      case 'bNone': bulk.sel.clear(); return render();
+      case 'bGo': return bulkGo();
+      case 'wSave': {
+        const g = +$('#wG').value, l = +$('#wL').value; if (!g || !l) return alert('흉위와 체장을 넣어 주세요.');
+        const m = findCowByShort($('#wCow').value);
+        if (m.length !== 1) return alert(m.length ? `끝자리가 같은 소가 ${m.length}마리예요. 번호를 더 길게 넣어 주세요.` : '해당 번호의 소를 찾지 못했어요.');
+        const ev = { id: uid(), cowId: m[0].id, type: '체중', date: today(), t: Date.now(), kg: estWeight(g, l), girth: g, len: l, est: true };
+        await saveEvents([ev]); toast(`${short(m[0].tag)}번 ${ev.kg}kg 기록`); return;
+      }
+      case 'wCal': {
+        const v = await form('실측값으로 보정', [{ k: 'girth', label: '흉위 cm', type: 'number', required: true }, { k: 'len', label: '체장 cm', type: 'number', required: true }, { k: 'kg', label: '체중계로 잰 실제 kg', type: 'number', required: true }]);
+        if (!v) return; const raw = (+v.girth) ** 2 * (+v.len) / 10838; const f = +(v.kg / raw).toFixed(3);
+        if (!(f > 0.6 && f < 1.5)) return alert(`보정 계수가 ${f}로 너무 벗어나요. 값을 다시 확인해 주세요.`);
+        await setKV('wFactor', f); toast(`보정 계수 ${f}로 저장`); return render();
+      }
+      case 'lMonth': { const [y, m] = ledgerMonth.split('-').map(Number); const dt = new Date(y, m - 1 + +d.v, 1); ledgerMonth = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}`; return render(); }
+      case 'lAdd': return editLedger(d.v);
+      case 'lEdit': return editLedger(null, S.ledger.find(x => x.id === d.id));
+      case 'lCsv': {
+        const yr = ledgerMonth.slice(0, 4), rows = S.ledger.filter(x => x.date.startsWith(yr)).sort((a, b) => a.date.localeCompare(b.date));
+        download(`한우수첩-장부-${yr}.csv`, toCsv([['날짜', '구분', '항목', '금액', '수량', '메모'], ...rows.map(x => [x.date, x.kind, x.cat, x.amount, x.qty, x.memo])]), 'text/csv'); return;
+      }
+      case 'hLoc': {
+        if (!navigator.geolocation) return alert('이 기기에서는 위치를 쓸 수 없어요.');
+        toast('위치를 찾는 중…');
+        navigator.geolocation.getCurrentPosition(async p => {
+          await setKV('lat', +p.coords.latitude.toFixed(3)); await setKV('lon', +p.coords.longitude.toFixed(3));
+          const name = prompt('농장 이름이나 지역을 적어 두세요 (선택)', S.kv.place || ''); if (name != null) await setKV('place', name.trim());
+          try { await fetchHeat(true); } catch (err) { toast(err.message); } render();
+        }, err => alert('위치를 가져오지 못했어요: ' + err.message), { enableHighAccuracy: false, timeout: 15000 });
+        return;
+      }
+      case 'hRefresh': try { await fetchHeat(true); toast('새로 불러왔어요'); } catch (err) { toast(err.message); } return render();
+      case 'backup': return makeBackup();
+      case 'cowCsv': download(`한우수첩-소목록-${today()}.csv`, toCsv([['귀표번호', '이름', '성별', '구분', '생년월일', '월령', '칸', '어미', '상태', '번식상태', '메모'], ...S.cows.map(c => [c.tag, c.name, c.sex, c.group, c.birth, ageMonths(c.birth), c.pen, c.mother, c.status, breeding(c)?.label, c.memo])]), 'text/csv'); return;
+      case 'wipe':
+        if (!confirm('정말 모든 소·기록·장부를 지울까요? 되돌릴 수 없어요.') || prompt('지우려면 “삭제”라고 입력하세요') !== '삭제') return;
+        for (const s of STORES) await DB.clear(s); for (const k in photoUrls) delete photoUrls[k]; S.cows = []; S.events = []; S.ledger = []; S.kv = { ...DEFAULTS }; S.heat = null; location.hash = '#/'; return render();
+    }
+  } else if (go) { location.hash = go.dataset.go; }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'cowQ') { cowFilter.q = t.value; const l = filteredCows(); $('#cowBox').innerHTML = cowListHtml(l); $('#cowCount').textContent = l.length; }
+  if (t.id === 'wG' || t.id === 'wL') {
+    const g = +$('#wG').value, l = +$('#wL').value;
+    if (g > 50 && l > 50) { const w = estWeight(g, l); $('#wOut').textContent = `${w} kg`; $('#wRange').textContent = `대략 ${Math.round(w * .9)} ~ ${Math.round(w * 1.1)} kg`; }
+    else { $('#wOut').textContent = '- kg'; $('#wRange').textContent = ''; }
+  }
+});
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.id === 'fPen') { cowFilter.pen = t.value; render(); }
+  if (t.id === 'fStatus') { cowFilter.status = t.value; render(); }
+  if (t.id === 'bPen') { bulk.pen = t.value; render(); }
+  if (t.dataset.bsel) {
+    t.checked ? bulk.sel.add(t.dataset.bsel) : bulk.sel.delete(t.dataset.bsel);
+    const n = bulk.visible.filter(id => bulk.sel.has(id)).length;
+    $('#bCount').textContent = `${n}마리 선택`; const b = $('#bGoBtn'); b.disabled = !n; b.textContent = `3. ${n}마리에 ${bulk.type} 기록하기 →`;
+  }
+  if (t.dataset.kv) { const k = t.dataset.kv, v = t.type === 'number' ? +t.value : t.value; if (t.type === 'number' && !(v > 0)) return toast('0보다 큰 숫자를 넣어 주세요'); await setKV(k, v); toast('저장했어요'); }
+  if (t.id === 'photoIn' && t.files[0]) {
+    try { const blob = await shrink(t.files[0]); await DB.put('photos', { id: t.dataset.id, blob }); if (photoUrls[t.dataset.id]) URL.revokeObjectURL(photoUrls[t.dataset.id]); delete photoUrls[t.dataset.id]; toast('사진을 저장했어요'); render(); }
+    catch (err) { alert(err.message); }
+  }
+  if (t.id === 'restoreIn' && t.files[0]) restore(t.files[0]);
+});
+
+/* ================= 시작 ================= */
+(async () => {
+  try { await DB.open(); await loadAll(); }
+  catch (err) { $('#app').innerHTML = `<div class="msg err">저장소를 열지 못했어요: ${esc(err.message)}<br>시크릿 모드라면 일반 창에서 열어 주세요.</div>`; return; }
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  render();
+  if (S.kv.lat != null && navigator.onLine) fetchHeat().then(() => { if ((location.hash || '#/') === '#/' || location.hash === '#/heat') render(); }, () => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
